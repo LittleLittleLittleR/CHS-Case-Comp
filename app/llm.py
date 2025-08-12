@@ -1,5 +1,8 @@
 from langchain.prompts import PromptTemplate
 from transformers import pipeline
+from openai import OpenAI
+import dotenv
+import os
 
 from models import EmailAnalysis, parser
 from prompt_template import prompt_template
@@ -13,22 +16,25 @@ Subject: Urgent account verification required!
 Hello, your account will be suspended unless you verify it now: http://fake-link.com
 """
 
+os.load_dotenv()
 
 prompt = prompt_template.format(email_text=email_text)
 
 # load model
-pipe = pipeline(
-    model="microsoft/Phi-4-mini-instruct", 
-    task="text-generation",
+client = OpenAI(
+    api_key=os.getenv("OPEN_AI_API_KEY"),
 )
 
-# run model
-raw_output = pipe(prompt, max_new_tokens=500, temperature=0)[0]["generated_text"]
+response = client.responses.create(
+  model="gpt-4o-mini",
+  input=prompt,
+)
+model_output = response.output_text
 
 # parse JSON output
 try:
-    parsed = parser.parse(raw_output)
-    print(parsed.model_dump())  # Benchmark-ready structured output
+    parsed = parser.parse(response)
+    print(parsed.model_dump())
 except Exception as e:
     print("Parsing failed:", e)
-    print("Raw model output:", raw_output)
+    print("Raw model output:", response)
