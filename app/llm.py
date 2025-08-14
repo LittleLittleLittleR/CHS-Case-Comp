@@ -17,22 +17,24 @@ Hello, your account will be suspended unless you verify it now: http://fake-link
 """
 
 load_dotenv()
-class LLM():
+
+
+class LLM:
 
     def __init__(self):
         self.CLIENT = OpenAI(api_key=os.getenv("OPEN_AI_API_KEY"))
         self.MODEL = os.getenv("OPEN_AI_MODEL")
-    
+
     def _run_prompt(self, template, email_text):
         prompt = template.format(email_text=email_text)
-        
+
         response = self.CLIENT.responses.create(
             model=self.MODEL,
             input=prompt,
         )
 
         model_output = response.output_text
-        
+
         try:
             parsed = PARSER.parse(model_output)
             return parsed.model_dump()
@@ -42,7 +44,9 @@ class LLM():
             raise e
 
     def classify_email(self, email_text: str) -> dict:
+        print("email received: ", email_text)
         return self._run_prompt(classify_template, email_text)
-    
+
     def analyse_email(self, email_text: str) -> dict:
         return self._run_prompt(analyse_template, email_text)
+

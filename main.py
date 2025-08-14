@@ -10,7 +10,8 @@ from app.models import AnalyseModel, MESSAGE
 app = FastAPI()
 
 public_origins = [
-    "http://localhost:3000", # Change according to frontend URL
+    "http://localhost:3000",
+    "https://mail.google.com",  # Change according to frontend URL
 ]
 
 app.add_middleware(
@@ -26,6 +27,7 @@ llm = LLM()
 load_dotenv()
 DEV_API_KEY = os.getenv("DEV_API_KEY")
 
+
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the FastAPI backend!"}
@@ -36,8 +38,13 @@ async def read_root():
 async def ping() -> dict:
     return {"message": "pong"}
 
+
 @app.post("/classify")
-async def classify(api_key: str, email_text: str) -> dict:
+async def classify(req: Request) -> dict:
+    data = await req.json()
+    api_key = data.get("api_key")
+    email_text = data.get("email_text")
+
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
 
@@ -49,21 +56,15 @@ async def classify(api_key: str, email_text: str) -> dict:
 async def analyse(api_key: str, email_text: str, is_phishing: bool = True) -> dict:
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
-    
+
     # default analysis and message
-    analysis_result = {
-        "High_Risk": [],
-        "Low_Risk": []
-    }
+    analysis_result = {"High_Risk": [], "Low_Risk": []}
     message = MESSAGE[is_phishing]
-    
+
     if is_phishing:
         analysis_result = llm.analyse_email(email_text)
-    
-    return {
-        "message": message,
-        "analysis": analysis_result
-    }
+
+    return {"message": message, "analysis": analysis_result}
 
 
 # End user endpoint
@@ -72,18 +73,13 @@ async def assess(email_text: str) -> dict:
     # classify
     is_phishing = llm.classify_email(email_text)
 
-    message = MESSAGE[is_phishing['is_phishing']]
+    message = MESSAGE[is_phishing["is_phishing"]]
 
     if is_phishing:
         # analyze if phishing
         analysis_result = llm.analyse_email(email_text)
     else:
-        analysis_result = {
-            "High_Risk": [],
-            "Low_Risk": []
-        }
-    
-    return {
-        "message": message,
-        "analysis": analysis_result
-    }
+        analysis_result = {"High_Risk": [], "Low_Risk": []}
+
+    return {"message": message, "analysis": analysis_result}
+
