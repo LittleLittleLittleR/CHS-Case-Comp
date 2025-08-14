@@ -4,8 +4,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
-from models import EmailAnalysis, parser
-from prompts import classify_template, analyse_template
+from .models import PARSER
+from .prompts import classify_template, analyse_template
 
 
 # example email input
@@ -34,15 +34,15 @@ class LLM():
         model_output = response.output_text
         
         try:
-            parsed = parser.parse(model_output)
+            parsed = PARSER.parse(model_output)
             return parsed.model_dump()
         except Exception as e:
             print("Parsing failed:", e)
             print("Raw model output:", model_output)
             raise e
 
-    def classify_email(self, email_text: str) -> EmailAnalysis:
+    def classify_email(self, email_text: str) -> dict:
         return self._run_prompt(classify_template, email_text)
     
-    def analyse_email(self, email_text: str, class_result:bool) -> dict:
+    def analyse_email(self, email_text: str) -> dict:
         return self._run_prompt(analyse_template, email_text)

@@ -1,4 +1,7 @@
 openai
 dotenv
 fastapi
+pydantic
+langchain
+transformers
 uvicorn[standard]

@@ -1,0 +1,4 @@
+OPEN_AI_MODEL=gpt-4o-mini
+OPEN_AI_API_KEY=OPEN_AI_API_KEY
+
+DEV_API_KEY=chs-dev

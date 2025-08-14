@@ -2,18 +2,13 @@ from typing import Optional
 from pydantic import BaseModel
 from langchain.output_parsers import PydanticOutputParser
 
-class EmailAnalysis(BaseModel):
-    Sender: Optional[str]
-    Receiver: Optional[str]
-    Subject: Optional[str]
-    Content: str
-    Phishing: bool
-    Reason_1: Optional[str] = None
-    Risk_level_1: Optional[str] = None
-    Reason_2: Optional[str] = None
-    Risk_level_2: Optional[str] = None
-    Reason_3: Optional[str] = None
-    Risk_level_3: Optional[str] = None
-    
+class AnalyseModel(BaseModel):
+    High_Risk: list[str]
+    Low_Risk: list[str]
 
-parser = PydanticOutputParser(pydantic_object=EmailAnalysis)
+PARSER = PydanticOutputParser(pydantic_object=AnalyseModel)
+
+MESSAGE = {
+    True: "The email seems safe. But double-check before taking any action.",
+    False: "The email is likely a phishing attempt. Please review the analysis below for details."
+}
