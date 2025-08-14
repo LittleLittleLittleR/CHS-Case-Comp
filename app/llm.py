@@ -4,7 +4,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
-from .models import PARSER
+from .models import CLASSIFY_PARSER, ANALYSE_PARSER
 from .prompts import classify_template, analyse_template
 
 
@@ -25,6 +25,7 @@ class LLM:
         self.CLIENT = OpenAI(api_key=os.getenv("OPEN_AI_API_KEY"))
         self.MODEL = os.getenv("OPEN_AI_MODEL")
 
+
     def _run_prompt(self, template, email_text):
         prompt = template.format(email_text=email_text)
 
@@ -33,20 +34,30 @@ class LLM:
             input=prompt,
         )
 
-        model_output = response.output_text
+        return response.output_text
+
+
+    def classify_email(self, email_text: str) -> dict:
+        print("email received: ", email_text)
+        
+        model_output = self._run_prompt(classify_template, email_text)
 
         try:
-            parsed = PARSER.parse(model_output)
+            parsed = CLASSIFY_PARSER.parse(model_output)
             return parsed.model_dump()
         except Exception as e:
             print("Parsing failed:", e)
             print("Raw model output:", model_output)
             raise e
 
-    def classify_email(self, email_text: str) -> dict:
-        print("email received: ", email_text)
-        return self._run_prompt(classify_template, email_text)
 
     def analyse_email(self, email_text: str) -> dict:
-        return self._run_prompt(analyse_template, email_text)
+        model_output = self._run_prompt(analyse_template, email_text)
 
+        try:
+            parsed = ANALYSE_PARSER.parse(model_output)
+            return parsed.model_dump()
+        except Exception as e:
+            print("Parsing failed:", e)
+            print("Raw model output:", model_output)
+            raise e

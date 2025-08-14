@@ -1,6 +1,6 @@
 from langchain.prompts import PromptTemplate
 
-from .models import PARSER
+from .models import CLASSIFY_PARSER, ANALYSE_PARSER
 
 classify_template = PromptTemplate(
     template=(
@@ -18,7 +18,7 @@ EMAIL:\n{email_text}
 """
     ),
     input_variables=["email_text"],
-    partial_variables={"format_instructions": PARSER.get_format_instructions()},
+    partial_variables={"format_instructions": CLASSIFY_PARSER.get_format_instructions()},
 )
 
 analyse_template = PromptTemplate(
@@ -69,7 +69,7 @@ Here is are 2 examples of the output:
 """
     ),
     input_variables=["email_text"],
-    partial_variables={"format_instructions": PARSER.get_format_instructions()},
+    partial_variables={"format_instructions": ANALYSE_PARSER.get_format_instructions()},
 )
 
 __all__ = ["classify_template", "analyse_template"]

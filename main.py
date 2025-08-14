@@ -53,7 +53,12 @@ async def classify(req: Request) -> dict:
 
 
 @app.post("/analyse")
-async def analyse(api_key: str, email_text: str, is_phishing: bool = True) -> dict:
+async def analyse(req: Request) -> dict:
+    data = await req.json()
+    api_key = data.get("api_key")
+    email_text = data.get("email_text")
+    is_phishing = data.get("is_phishing")
+
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
 
@@ -69,7 +74,10 @@ async def analyse(api_key: str, email_text: str, is_phishing: bool = True) -> di
 
 # End user endpoint
 @app.post("/assess")
-async def assess(email_text: str) -> dict:
+async def assess(req: Request) -> dict:
+    data = await req.json()
+    email_text = data.get("email_text")
+    
     # classify
     is_phishing = llm.classify_email(email_text)
 

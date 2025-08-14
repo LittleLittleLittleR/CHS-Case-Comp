@@ -2,11 +2,15 @@ from typing import Optional
 from pydantic import BaseModel
 from langchain.output_parsers import PydanticOutputParser
 
+class ClassifyModel(BaseModel):
+    is_phishing: bool
+
 class AnalyseModel(BaseModel):
     High_Risk: list[str]
     Low_Risk: list[str]
 
-PARSER = PydanticOutputParser(pydantic_object=AnalyseModel)
+CLASSIFY_PARSER = PydanticOutputParser(pydantic_object=ClassifyModel)
+ANALYSE_PARSER = PydanticOutputParser(pydantic_object=AnalyseModel)
 
 MESSAGE = {
     True: "The email seems safe. But double-check before taking any action.",
