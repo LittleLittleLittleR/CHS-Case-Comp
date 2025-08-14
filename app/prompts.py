@@ -1,7 +1,7 @@
 from langchain.prompts import PromptTemplate
 from models import parser
 
-prompt_template = PromptTemplate(
+classify_template = PromptTemplate(
     template=(
         """
 You are an intellegent and meticulous AI email analyzer. 
@@ -34,5 +34,15 @@ EMAIL:\n{email_text}
     partial_variables={"format_instructions": parser.get_format_instructions()}
 )
 
+analyse_template = PromptTemplate(
+    template=(
+        """
+You are an intelligent and meticulous AI email analyzer. 
+Your task is to analyze the following email and provide a detailed analysis.
+"""),
+    input_variables=["email_text"],
+    partial_variables={"format_instructions": parser.get_format_instructions()}
+)
+
 # export parser and template
-__all__ = ["prompt_template", "parser"]
+__all__ = ["classify_template", "parser"]

@@ -1,11 +1,11 @@
 from langchain.prompts import PromptTemplate
 from transformers import pipeline
 from openai import OpenAI
-import dotenv
+from dotenv import load_dotenv
 import os
 
 from models import EmailAnalysis, parser
-from prompt_template import prompt_template
+from prompts import classify_template, analyse_template
 
 
 # example email input
@@ -16,25 +16,33 @@ Subject: Urgent account verification required!
 Hello, your account will be suspended unless you verify it now: http://fake-link.com
 """
 
-os.load_dotenv()
+load_dotenv()
+class LLM():
 
-prompt = prompt_template.format(email_text=email_text)
+    def __init__(self):
+        self.CLIENT = OpenAI(api_key=os.getenv("OPEN_AI_API_KEY"))
+        self.MODEL = os.getenv("OPEN_AI_MODEL")
+    
+    def _run_prompt(self, template, email_text):
+        prompt = template.format(email_text=email_text)
+        
+        response = self.CLIENT.responses.create(
+            model=self.MODEL,
+            input=prompt,
+        )
 
-# load model
-client = OpenAI(
-    api_key=os.getenv("OPEN_AI_API_KEY"),
-)
+        model_output = response.output_text
+        
+        try:
+            parsed = parser.parse(model_output)
+            return parsed.model_dump()
+        except Exception as e:
+            print("Parsing failed:", e)
+            print("Raw model output:", model_output)
+            raise e
 
-response = client.responses.create(
-  model="gpt-4o-mini",
-  input=prompt,
-)
-model_output = response.output_text
-
-# parse JSON output
-try:
-    parsed = parser.parse(response)
-    print(parsed.model_dump())
-except Exception as e:
-    print("Parsing failed:", e)
-    print("Raw model output:", response)
+    def classify_email(self, email_text: str) -> EmailAnalysis:
+        return self._run_prompt(classify_template, email_text)
+    
+    def analyse_email(self, email_text: str, class_result:bool) -> dict:
+        return self._run_prompt(analyse_template, email_text)
