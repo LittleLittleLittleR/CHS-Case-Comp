@@ -9,16 +9,18 @@ You are an intellegent and meticulous AI phishing detector.
 Your task is to analyze the following email to determine if it is a phishing email or not.
 The output should be a JSON object that matches the following schema:
 
-{
+{{
     "is_phishing": True/False  # capitalized boolean
-}
+}}
 
 JSON schema:\n{format_instructions}\n\n
 EMAIL:\n{email_text}
 """
     ),
     input_variables=["email_text"],
-    partial_variables={"format_instructions": CLASSIFY_PARSER.get_format_instructions()},
+    partial_variables={
+        "format_instructions": CLASSIFY_PARSER.get_format_instructions()
+    },
 )
 
 analyse_template = PromptTemplate(
@@ -29,7 +31,7 @@ Your task is to analyze the following phishing email and provide a detailed anal
 You should provide the reasons and risk levels for each reason.
 The output should be a JSON object that matches the following schema:
 
-{
+{{
     "High_Risk": [
         "Reason_1",
         "Reason_2",
@@ -40,12 +42,12 @@ The output should be a JSON object that matches the following schema:
         "Reason_2",
         "Reason_3"
     ],
-}
+}}
 
 
 Here is are 2 examples of the output:
 
-{
+{{
     "High_Risk": [
         "The email contains a suspicious link that leads to a phishing site.",
         "The sender's email address is not recognized and appears to be from a free email service.",
@@ -53,9 +55,9 @@ Here is are 2 examples of the output:
     "Low_Risk": [
         "The email contains grammatical errors and awkward phrasing."
     ]
-}
+}}
 
-{
+{{
     "High_Risk": [
         "The sender claims to be from a legitimate organization but the email address does not match the official domain.",
 
@@ -64,7 +66,7 @@ Here is are 2 examples of the output:
         "The email has a generic greeting and does not address the recipient by name.",
         "The email contains a sense of urgency, pressuring the recipient to act quickly.",
     ]
-}
+}}
 
 """
     ),

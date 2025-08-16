@@ -23,8 +23,7 @@ class LLM:
 
     def __init__(self):
         self.CLIENT = OpenAI(api_key=os.getenv("OPEN_AI_API_KEY"))
-        self.MODEL = os.getenv("OPEN_AI_MODEL")
-
+        self.MODEL = "gpt-4o-mini"
 
     def _run_prompt(self, template, email_text):
         prompt = template.format(email_text=email_text)
@@ -36,10 +35,9 @@ class LLM:
 
         return response.output_text
 
-
     def classify_email(self, email_text: str) -> dict:
         print("email received: ", email_text)
-        
+
         model_output = self._run_prompt(classify_template, email_text)
 
         try:
@@ -49,7 +47,6 @@ class LLM:
             print("Parsing failed:", e)
             print("Raw model output:", model_output)
             raise e
-
 
     def analyse_email(self, email_text: str) -> dict:
         model_output = self._run_prompt(analyse_template, email_text)

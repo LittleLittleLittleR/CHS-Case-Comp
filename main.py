@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
+from app import rayyantest
 from app.llm import LLM
 from app.models import AnalyseModel, MESSAGE
 
@@ -12,11 +13,13 @@ app = FastAPI()
 public_origins = [
     "http://localhost:3000",
     "https://mail.google.com",  # Change according to frontend URL
+    "http://localhost:5173",
+    "chrome-extension://bhjpopgmefpcchjflgipbonlalkfichp",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=public_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,8 +51,15 @@ async def classify(req: Request) -> dict:
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
 
-    is_phishing = llm.classify_email(email_text)
+    is_phishing = llm.classify_email(email_text.strip().replace("\n", " "))
+    print("from endpoint: ", is_phishing)
     return is_phishing
+
+
+@app.post("/post-ping")
+async def postping(req: Request) -> dict:
+    data = await req.json()
+    return data
 
 
 @app.post("/analyse")
@@ -67,7 +77,7 @@ async def analyse(req: Request) -> dict:
     message = MESSAGE[is_phishing]
 
     if is_phishing:
-        analysis_result = llm.analyse_email(email_text)
+        analysis_result = llm.analyse_email(email_text.strip().replace("\n", " "))
 
     return {"message": message, "analysis": analysis_result}
 
@@ -77,13 +87,14 @@ async def analyse(req: Request) -> dict:
 async def assess(req: Request) -> dict:
     data = await req.json()
     email_text = data.get("email_text")
-    
+    # print("[FASTAPI]: Received Access Request", email_text.strip().replace("\n", " "))
     # classify
     is_phishing = llm.classify_email(email_text)
-
+    print("is_phishing: ", is_phishing)
+    # print("\n\n\n\n\n\n\n\n\n")
     message = MESSAGE[is_phishing["is_phishing"]]
 
-    if is_phishing:
+    if is_phishing["is_phishing"]:
         # analyze if phishing
         analysis_result = llm.analyse_email(email_text)
     else:
@@ -91,3 +102,11 @@ async def assess(req: Request) -> dict:
 
     return {"message": message, "analysis": analysis_result}
 
+
+@app.post("/rayyanapi")
+async def rayyanapi(req: Request) -> dict:
+    print("received rayyanapi request!")
+    data = await req.json()
+    email_text = data.get("email_text")
+    res = await rayyantest.callAgent(email_text.replace("\n", " ").strip())
+    return {"message": res}
