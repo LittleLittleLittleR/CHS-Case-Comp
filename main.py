@@ -6,7 +6,7 @@ import os
 
 from app import rayyantest
 from app.llm import LLM
-from app.models import AnalyseModel, MESSAGE
+from app.models import AnalyseResponse, MESSAGE
 
 app = FastAPI()
 
@@ -51,11 +51,12 @@ async def classify(req: Request) -> dict:
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
 
-    is_phishing = llm.classify_email(email_text.strip().replace("\n", " "))
+    is_phishing = llm.classify_email(email_text.strip())  # TODO: Check if return type matches for frontend
+
     print("from endpoint: ", is_phishing)
     return is_phishing
 
-
+# Testing endpoint
 @app.post("/post-ping")
 async def postping(req: Request) -> dict:
     data = await req.json()
@@ -77,7 +78,7 @@ async def analyse(req: Request) -> dict:
     message = MESSAGE[is_phishing]
 
     if is_phishing:
-        analysis_result = llm.analyse_email(email_text.strip().replace("\n", " "))
+        analysis_result = llm.analyse_email(email_text.strip())  # TODO: Check if return type matches for frontend
 
     return {"message": message, "analysis": analysis_result}
 

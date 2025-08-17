@@ -1,19 +1,20 @@
 from typing import Optional
-from pydantic import BaseModel
-from langchain.output_parsers import PydanticOutputParser
+from pydantic import BaseModel, Field
 
 
-class ClassifyModel(BaseModel):
-    is_phishing: bool
+class ClassifyResponse(BaseModel):
+    is_phishing: bool = Field(
+        description="True if the email is phishing, False if it is not."
+    )
 
 
-class AnalyseModel(BaseModel):
-    High_Risk: list[str]
-    Low_Risk: list[str]
-
-
-CLASSIFY_PARSER = PydanticOutputParser(pydantic_object=ClassifyModel)
-ANALYSE_PARSER = PydanticOutputParser(pydantic_object=AnalyseModel)
+class AnalyseResponse(BaseModel):
+    High_Risk: list[str] = Field(
+        description="List of high-risk reasons for classifying the email as phishing."
+    )
+    Low_Risk: list[str] = Field(
+        description="List of low-risk reasons for classifying the email as phishing."
+    )
 
 MESSAGE = {
     False: "The email seems safe. But double-check before taking any action.",
