@@ -6,7 +6,7 @@ from .prompt_templates import (
     analyse_template,
 )
 
-def classify_chain(llm):
+def classify_chain(llm):   
     json_parser = JsonOutputParser(pydantic_object=ClassifyResponse)
 
     prompt = classify_template.classify_template.partial(

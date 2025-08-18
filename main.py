@@ -44,6 +44,7 @@ async def ping() -> dict:
 
 @app.post("/classify")
 async def classify(req: Request) -> dict:
+    print("received classify request!")
     data = await req.json()
     api_key = data.get("api_key")
     email_text = data.get("email_text")
@@ -51,9 +52,14 @@ async def classify(req: Request) -> dict:
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
 
+    print('received')
+
     is_phishing = llm.classify_email(email_text.strip())  # TODO: Check if return type matches for frontend
 
     print("from endpoint: ", is_phishing)
+
+    if hasattr(is_phishing, "model_dump"):  
+        return is_phishing.model_dump()
     return is_phishing
 
 # Testing endpoint
@@ -92,10 +98,15 @@ async def assess(req: Request) -> dict:
     # classify
     is_phishing = llm.classify_email(email_text)
     print("is_phishing: ", is_phishing)
-    # print("\n\n\n\n\n\n\n\n\n")
-    message = MESSAGE[is_phishing["is_phishing"]]
 
-    if is_phishing["is_phishing"]:
+    if hasattr(is_phishing, "model_dump"):  
+        response = is_phishing.model_dump()["is_phishing"]
+    else:
+        response = is_phishing["is_phishing"]
+
+    message = MESSAGE[response]
+
+    if response:
         # analyze if phishing
         analysis_result = llm.analyse_email(email_text)
     else:
