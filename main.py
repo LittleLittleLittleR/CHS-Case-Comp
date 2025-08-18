@@ -52,11 +52,7 @@ async def classify(req: Request) -> dict:
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
 
-    print('received')
-
     is_phishing = llm.classify_email(email_text)  # TODO: Check if return type matches for frontend
-
-    print("from endpoint: ", is_phishing)
 
     if hasattr(is_phishing, "model_dump"):  
         return is_phishing.model_dump()
@@ -99,7 +95,6 @@ async def assess(req: Request) -> dict:
     # print("[FASTAPI]: Received Access Request", email_text.strip().replace("\n", " "))
     # classify
     is_phishing = llm.classify_email(email_text)
-    print("is_phishing: ", is_phishing)
 
     if hasattr(is_phishing, "model_dump"):  
         response = is_phishing.model_dump()["is_phishing"]
@@ -111,14 +106,18 @@ async def assess(req: Request) -> dict:
     if response:
         # analyze if phishing
         analysis_result = llm.analyse_email(email_text)
+        if hasattr(analysis_result, "model_dump"):
+            analysis_result = analysis_result.model_dump()["analysis"]
+        else:
+            analysis_result = analysis_result["analysis"]
     else:
-        analysis_result = AnalyseResponseList(analysis=[])
+        analysis_result = []
 
     print("from endpoint: ", analysis_result)
 
     return {
         "message": message, 
-        "analysis": [anal.model_dump() for anal in analysis_result.model_dump()["analysis"]]
+        "analysis": analysis_result
     }
 
 
