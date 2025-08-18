@@ -1,32 +1,42 @@
 from langchain_core.prompts import ChatPromptTemplate
 
 system_prompt = """"You are an intelligent and meticulous AI phishing email analyzer. 
-Given the following phishing email and description, analyze the phishing email and provide a detailed analysis as to why is it a phishing email.
-You should provide the reasons under the correct risk levels.
+Given the following phishing email and description, analyze the phishing email and generate a structured JSON to show a detailed analysis as to why is it a phishing email.
+In the JSON, provide a "html" quote, a "reason" why the quote supports the phishing classification, and the overall "risk" level.
 
 {analyse_response_format}
 
 
-Here is are 2 examples of the output:
+Here are 2 examples of the output:
 
 {{
-    "High_Risk": [
-        "The email contains a suspicious link that leads to a phishing site.",
-        "The sender's email address is not recognized and appears to be from a free email service.",
-    ],
-    "Low_Risk": [
-        "The email contains grammatical errors and awkward phrasing."
+    "analysis": [
+        {{
+            "html": "<a href=\"http://shopping-website.com/verify\">Continue Shopping</a>",
+            "reason": "The link is a http link that leads to a unsecure site.",
+            "risk": "High"
+        }},
+        {{
+            "html": "<p>Urgent account verification required!</p>",
+            "reason": "The email contains a sense of urgency, pressuring the recipient to act quickly.",
+            "risk": "Low"
+        }}
     ]
 }}
 
-{{
-    "High_Risk": [
-        "The sender claims to be from a legitimate organization but the email address does not match the official domain.",
 
-    ],
-    "Low_Risk": [
-        "The email has a generic greeting and does not address the recipient by name.",
-        "The email contains a sense of urgency, pressuring the recipient to act quickly.",
+{{
+    "analysis": [
+        {{
+            "html": "<span>hotel_@email.com</span>",
+            "reason": "The email address is from a free email service and does not match the official domain.",
+            "risk": "High"
+        }},
+        {{
+            "html": "<p>Hello to all, </p>",
+            "reason": "The email contains a generic greeting and does not address the recipient by name.",
+            "risk": "Low"
+        }}
     ]
 }}
 

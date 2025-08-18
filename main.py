@@ -6,7 +6,7 @@ import os
 
 from app import rayyantest
 from app.llm import LLM
-from app.models import AnalyseResponse, MESSAGE
+from app.models import AnalyseResponseList, MESSAGE
 
 app = FastAPI()
 
@@ -54,7 +54,7 @@ async def classify(req: Request) -> dict:
 
     print('received')
 
-    is_phishing = llm.classify_email(email_text.strip())  # TODO: Check if return type matches for frontend
+    is_phishing = llm.classify_email(email_text)  # TODO: Check if return type matches for frontend
 
     print("from endpoint: ", is_phishing)
 
@@ -80,14 +80,16 @@ async def analyse(req: Request) -> dict:
         return {"error": "Unauthorized access. Invalid API key."}
 
     # default analysis and message
-    analysis_result = {"High_Risk": [], "Low_Risk": []}
+    analysis_result = AnalyseResponseList(analysis=[])
     message = MESSAGE[is_phishing]
 
     if is_phishing:
-        analysis_result = llm.analyse_email(email_text.strip())  # TODO: Check if return type matches for frontend
+        analysis_result = llm.analyse_email(email_text)  # TODO: Check if return type matches for frontend
 
-    return {"message": message, "analysis": analysis_result}
-
+    return {
+        "message": message, 
+        "analysis": analysis_result.model_dump()["analysis"]
+    }
 
 # End user endpoint
 @app.post("/assess")
@@ -110,9 +112,14 @@ async def assess(req: Request) -> dict:
         # analyze if phishing
         analysis_result = llm.analyse_email(email_text)
     else:
-        analysis_result = {"High_Risk": [], "Low_Risk": []}
+        analysis_result = AnalyseResponseList(analysis=[])
 
-    return {"message": message, "analysis": analysis_result}
+    print("from endpoint: ", analysis_result)
+
+    return {
+        "message": message, 
+        "analysis": [anal.model_dump() for anal in analysis_result.model_dump()["analysis"]]
+    }
 
 
 @app.post("/rayyanapi")

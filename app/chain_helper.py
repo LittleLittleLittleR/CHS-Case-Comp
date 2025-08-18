@@ -1,5 +1,5 @@
 from langchain_core.output_parsers import JsonOutputParser
-from .models import ClassifyResponse, AnalyseResponse
+from .models import ClassifyResponse, AnalyseResponseList
 
 from .prompt_templates import (
     classify_template,
@@ -18,7 +18,7 @@ def classify_chain(llm):
     return chain
 
 def analyse_chain(llm):
-    json_parser = JsonOutputParser(pydantic_object=AnalyseResponse)
+    json_parser = JsonOutputParser(pydantic_object=AnalyseResponseList)
 
     prompt = analyse_template.analyse_template.partial(
         analyse_response_format=json_parser.get_format_instructions()

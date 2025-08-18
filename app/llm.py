@@ -4,7 +4,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
-from .models import ClassifyResponse, AnalyseResponse
+from .models import ClassifyResponse, AnalyseResponseList
 from .prompt_templates.classify_template import classify_template
 from .prompt_templates.analyse_template import analyse_template
 from .chain_helper import classify_chain, analyse_chain
@@ -53,15 +53,17 @@ class LLM:
             print("Raw model output:", model_output)
             raise e
 
-    def analyse_email(self, email_text: str) -> AnalyseResponse:
+    def analyse_email(self, email_text: str) -> AnalyseResponseList:
         print("email received in analyse: ", email_text)
 
         chain = analyse_chain(self.model)
 
+        print("chain created")
+
         model_output = chain.invoke({"phishing_email": email_text})
 
         try:
-            return AnalyseResponse(**model_output)
+            return AnalyseResponseList(**model_output)
         except Exception as e:
             print("Parsing failed:", e)
             print("Raw model output:", model_output)

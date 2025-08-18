@@ -9,12 +9,18 @@ class ClassifyResponse(BaseModel):
 
 
 class AnalyseResponse(BaseModel):
-    High_Risk: list[str] = Field(
-        description="List of high-risk reasons for classifying the email as phishing."
+    html: str = Field(
+        description="A word for word quote with the HTML tags from the email that supports the phishing classification."
     )
-    Low_Risk: list[str] = Field(
-        description="List of low-risk reasons for classifying the email as phishing."
+    reason: str = Field(
+        description="A brief reason explaining why the HTML quote supports the phishing classification."
     )
+    risk: str = Field(
+        description="The overall risk level of the email (e.g., 'High', 'Low')."
+    )
+
+class AnalyseResponseList(BaseModel):
+    analysis: list[AnalyseResponse]
 
 MESSAGE = {
     False: "The email seems safe. But double-check before taking any action.",
