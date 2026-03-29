@@ -1,7 +1,8 @@
-openai
-dotenv
-fastapi
-pydantic
-langchain
-transformers
-uvicorn[standard]
+openai==1.77.0
+dotenv==0.9.9
+fastapi[standard]==0.115.12
+pydantic==2.11.7
+langchain==0.3.25
+langchain-openai==0.3.16
+transformers==4.55.2
+uvicorn==0.35.0

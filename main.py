@@ -4,18 +4,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import os
 
+from app import rayyantest
 from app.llm import LLM
-from app.models import AnalyseModel, MESSAGE
+from app.models import AnalyseResponseList, MESSAGE
 
 app = FastAPI()
 
 public_origins = [
-    "http://localhost:3000", # Change according to frontend URL
+    "http://localhost:3000",
+    "https://mail.google.com",  # Change according to frontend URL
+    "http://localhost:5173",
+    "chrome-extension://bhjpopgmefpcchjflgipbonlalkfichp",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=public_origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +29,7 @@ llm = LLM()
 
 load_dotenv()
 DEV_API_KEY = os.getenv("DEV_API_KEY")
+
 
 @app.get("/")
 async def read_root():
@@ -36,54 +41,90 @@ async def read_root():
 async def ping() -> dict:
     return {"message": "pong"}
 
+
 @app.post("/classify")
-async def classify(api_key: str, email_text: str) -> dict:
+async def classify(req: Request) -> dict:
+    print("received classify request!")
+    data = await req.json()
+    api_key = data.get("api_key")
+    email_text = data.get("email_text")
+
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
 
-    is_phishing = llm.classify_email(email_text)
+    is_phishing = llm.classify_email(email_text)  # TODO: Check if return type matches for frontend
+
+    if hasattr(is_phishing, "model_dump"):  
+        return is_phishing.model_dump()
     return is_phishing
+
+# Testing endpoint
+@app.post("/post-ping")
+async def postping(req: Request) -> dict:
+    data = await req.json()
+    return data
 
 
 @app.post("/analyse")
-async def analyse(api_key: str, email_text: str, is_phishing: bool = True) -> dict:
+async def analyse(req: Request) -> dict:
+    data = await req.json()
+    api_key = data.get("api_key")
+    email_text = data.get("email_text")
+    is_phishing = data.get("is_phishing")
+
     if api_key != DEV_API_KEY:
         return {"error": "Unauthorized access. Invalid API key."}
-    
-    # default analysis and message
-    analysis_result = {
-        "High_Risk": [],
-        "Low_Risk": []
-    }
-    message = MESSAGE[is_phishing]
-    
-    if is_phishing:
-        analysis_result = llm.analyse_email(email_text)
-    
-    return {
-        "message": message,
-        "analysis": analysis_result
-    }
 
+    # default analysis and message
+    analysis_result = AnalyseResponseList(analysis=[])
+    message = MESSAGE[is_phishing]
+
+    if is_phishing:
+        analysis_result = llm.analyse_email(email_text)  # TODO: Check if return type matches for frontend
+
+    return {
+        "message": message, 
+        "analysis": analysis_result.model_dump()["analysis"]
+    }
 
 # End user endpoint
 @app.post("/assess")
-async def assess(email_text: str) -> dict:
+async def assess(req: Request) -> dict:
+    data = await req.json()
+    email_text = data.get("email_text")
+    # print("[FASTAPI]: Received Access Request", email_text.strip().replace("\n", " "))
     # classify
     is_phishing = llm.classify_email(email_text)
 
-    message = MESSAGE[is_phishing['is_phishing']]
+    if hasattr(is_phishing, "model_dump"):  
+        response = is_phishing.model_dump()["is_phishing"]
+    else:
+        response = is_phishing["is_phishing"]
 
-    if is_phishing:
+    message = MESSAGE[response]
+
+    if response:
         # analyze if phishing
         analysis_result = llm.analyse_email(email_text)
+        if hasattr(analysis_result, "model_dump"):
+            analysis_result = analysis_result.model_dump()["analysis"]
+        else:
+            analysis_result = analysis_result["analysis"]
     else:
-        analysis_result = {
-            "High_Risk": [],
-            "Low_Risk": []
-        }
-    
+        analysis_result = []
+
+    print("from endpoint: ", analysis_result)
+
     return {
-        "message": message,
+        "message": message, 
         "analysis": analysis_result
     }
+
+
+@app.post("/rayyanapi")
+async def rayyanapi(req: Request) -> dict:
+    print("received rayyanapi request!")
+    data = await req.json()
+    email_text = data.get("email_text")
+    res = await rayyantest.callAgent(email_text.replace("\n", " ").strip())
+    return {"message": res}

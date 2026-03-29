@@ -1,11 +1,13 @@
-from langchain.prompts import PromptTemplate
 from transformers import pipeline
+from langchain_openai import ChatOpenAI
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
-from .models import PARSER
-from .prompts import classify_template, analyse_template
+from .models import ClassifyResponse, AnalyseResponseList
+from .prompt_templates.classify_template import classify_template
+from .prompt_templates.analyse_template import analyse_template
+from .chain_helper import classify_chain, analyse_chain
 
 
 # example email input
@@ -17,32 +19,52 @@ Hello, your account will be suspended unless you verify it now: http://fake-link
 """
 
 load_dotenv()
-class LLM():
+
+
+class LLM:
 
     def __init__(self):
-        self.CLIENT = OpenAI(api_key=os.getenv("OPEN_AI_API_KEY"))
-        self.MODEL = os.getenv("OPEN_AI_MODEL")
-    
+        self.model = ChatOpenAI(
+            openai_api_key=os.getenv("OPEN_AI_API_KEY"),
+            model=os.getenv("OPEN_AI_MODEL"),
+        )
+
     def _run_prompt(self, template, email_text):
         prompt = template.format(email_text=email_text)
-        
+
         response = self.CLIENT.responses.create(
             model=self.MODEL,
             input=prompt,
         )
 
-        model_output = response.output_text
-        
+        return response.output_text
+
+    def classify_email(self, email_text: str) -> ClassifyResponse:
+        print("email received in classify: ", email_text)
+
+        chain = classify_chain(self.model)
+
+        model_output = chain.invoke({"user_email": email_text})
+
         try:
-            parsed = PARSER.parse(model_output)
-            return parsed.model_dump()
+            return ClassifyResponse(**model_output)
         except Exception as e:
             print("Parsing failed:", e)
             print("Raw model output:", model_output)
             raise e
 
-    def classify_email(self, email_text: str) -> dict:
-        return self._run_prompt(classify_template, email_text)
-    
-    def analyse_email(self, email_text: str) -> dict:
-        return self._run_prompt(analyse_template, email_text)
+    def analyse_email(self, email_text: str) -> AnalyseResponseList:
+        print("email received in analyse: ", email_text)
+
+        chain = analyse_chain(self.model)
+
+        print("chain created")
+
+        model_output = chain.invoke({"phishing_email": email_text})
+
+        try:
+            return AnalyseResponseList(**model_output)
+        except Exception as e:
+            print("Parsing failed:", e)
+            print("Raw model output:", model_output)
+            raise e
